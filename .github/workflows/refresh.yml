@@ -1,0 +1,101 @@
+name: Data snapshot · Refresh and publish
+on:
+  schedule:
+    - cron: '47 8 * * *'
+  workflow_dispatch:
+concurrency:
+  group: browser-tool-${{ github.ref }}
+  cancel-in-progress: false
+permissions:
+  contents: read
+jobs:
+  build:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    outputs:
+      publish: ${{ steps.identity.outputs.publish }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Install source parser
+        run: python3 -m pip install -r scripts/requirements.txt
+      - name: Refresh municipal snapshot
+        run: python3 scripts/refresh.py
+      - name: Test the application
+        run: node --test tests/*.test.mjs
+      - name: Test the builder
+        run: python3 -m unittest discover -s tests -v
+      - name: Build the static application
+        run: python3 scripts/build.py
+      - name: Check whether the tool has been initialized
+        id: identity
+        env:
+          REPOSITORY_NAME: ${{ github.event.repository.name }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          tool_id = json.load(open('tool.json'))['id']
+          ready = tool_id != 'coolcode-tool-template' and tool_id == os.environ['REPOSITORY_NAME']
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f'publish={str(ready).lower()}\n')
+          PY
+      - name: Install browser test dependencies
+        run: |
+          python3 -m pip install -r tests/browser-requirements.txt
+          python3 -m playwright install --with-deps chromium
+      - name: Check application in a browser
+        run: python3 tests/browser_smoke.py
+      - name: Save browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-checks
+          path: browser-checks/
+          retention-days: 7
+      - name: Preserve the validated snapshot and observed history
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add web/data/
+          if ! git diff --cached --quiet; then
+            git commit -m "Refresh public municipal snapshot"
+            git push origin HEAD:main
+          fi
+      - name: Save reviewable site
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-tool-preview
+          path: dist/
+          include-hidden-files: true
+          retention-days: 7
+      - name: Package Pages site
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.identity.outputs.publish == 'true'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && needs.build.outputs.publish == 'true'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.publish.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: publish

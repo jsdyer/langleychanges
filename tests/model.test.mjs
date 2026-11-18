@@ -1,21 +1,6 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import { cleanLines } from '../web/model.mjs';
-test('trims, removes blanks and preserves first-seen order', () => {
-  assert.deepEqual(cleanLines('  Halifax\nLangley\nHalifax\n\nVancouver  '), {
-    text: 'Halifax\nLangley\nVancouver', count: 3, removed: 1,
-  });
-});
-test('supports Windows and old Mac line endings', () => {
-  assert.equal(cleanLines('a\r\nb\ra').text, 'a\nb');
-});
-test('empty text and whitespace produce an empty result', () => {
-  assert.deepEqual(cleanLines(' \n\t'), { text: '', count: 0, removed: 0 });
-});
-test('preserves case and Unicode', () => {
-  assert.equal(cleanLines('Québec\nquébec\n東京\nQuébec').text, 'Québec\nquébec\n東京');
-});
-test('treats markup as ordinary text', () => {
-  assert.equal(cleanLines('<script>alert(1)</script>\n<script>alert(1)</script>').text, '<script>alert(1)</script>');
-});
-test('rejects non-text input', () => { assert.throws(() => cleanLines(null), TypeError); });
+import test from 'node:test';import assert from 'node:assert/strict';import {filterRecords,statusGroup,readWatchlist} from '../web/model.mjs';
+const a={id:'a',title:'208 Street',project:'1',application:'DP1',description:'Rental homes',community:'Willoughby',jurisdiction:'Township',status:'ACTIVE',date:'2026-01-01',history:[],baseline:true,first_seen:'2026-11-18',last_changed:'',missing_since:''};
+test('first snapshot is not a change or new application',()=>assert.equal(filterRecords([a],{changed:true}).length,0));
+test('filters compose and saved IDs are exact',()=>{assert.equal(filterRecords([a],{query:'rental',community:'Willoughby',saved:true,watchlist:['a']}).length,1);assert.equal(filterRecords([a],{saved:true,watchlist:['ab']}).length,0);assert.equal(filterRecords([a],{jurisdiction:'City'}).length,0);});
+test('published status is grouped without changing the original',()=>{const r={...a,status:'Development Permit issued – March 31, 2026'};assert.equal(statusGroup(r),'Approved / issued');assert.match(r.status,/March/);});
+test('bad local storage cannot break browsing',()=>{assert.deepEqual(readWatchlist('bad'),[]);assert.deepEqual(readWatchlist('{"x":1}'),[]);assert.deepEqual(readWatchlist('["a",42]'),['a']);});

@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+concurrency:
+  group: browser-tool-${{ github.ref }}
+  cancel-in-progress: false
 permissions:
   contents: read
 jobs:
@@ -22,6 +25,8 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
+      - name: Install source parser
+        run: python3 -m pip install -r scripts/requirements.txt
       - name: Test the application
         run: node --test tests/*.test.mjs
       - name: Test the builder

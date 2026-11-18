@@ -1,102 +1,67 @@
-# CoolCode browser tool template
+# Langley Changes
 
-A starting point for independent tools at `coolcode.ca/<repo>/`: a working local-text
-example, responsive UI, Python standard-library build, Node tests, PR checks and Pages
-publication. No npm install is needed.
+Search Langley development applications and follow changes to their public records.
 
-## One-time template setup
+**[Open the live browser tool](https://coolcode.ca/langleychanges/)** · [CoolCode catalogue](https://coolcode.ca/)
 
-Enable **Settings → General → Template repository** here. This repository does not
-need Pages enabled: its workflow builds/tests but intentionally skips deployment.
-New copies also skip deployment until `scripts/init.py` sets the tool ID to match
-their repository name. This lets you create the repo before configuring Pages.
+No installation or account is needed to use the tool. This repository contains its independent source, tests and GitHub Pages publishing workflow.
 
-## Start a new tool
+## What you can do
 
-1. Select **Use this template → Create a new repository**, choose owner `jsdyer`,
-   a unique lowercase name such as `my-tool`, and public visibility.
-2. Clone the new repository. Use Python 3.12+ and Node 24+.
-3. Set the identity, using a slug that matches the repository name:
+- Search addresses, application numbers and descriptions across Township and City records.
+- Filter by community and published status group; open original plans and documents.
+- Inspect Township application outlines; City records remain in the list without guessed locations.
+- Save application IDs in your browser, share a record, or export filtered results as CSV.
+- See differences observed between daily snapshots, including records no longer listed.
+
+The first snapshot contains **644 listed applications**: 615 Township and 29 City records. One development project can have several applications; these are not building or housing-unit counts.
+
+## Sources and change history
+
+- [Township development activity](https://www.tol.ca/en/building-development/development-activity.aspx), including its public ArcGIS application layer and source document links.
+- [City development application portal](https://www.langleycity.ca/business-development/development/development-application-portal). This features selected applications; monthly reports linked there provide the full active list. The app does not claim complete City coverage.
+
+Tracking began **2026-11-18**. The first snapshot is a baseline: older applications are not falsely marked new. Subsequent snapshots record changed fields, first appearances, disappearance and reappearance. Source milestones are shown separately from changes observed by this tool. A disappearance is not evidence of completion or cancellation. Original status text is preserved beside broad filter groups.
+
+Stable source record IDs connect snapshots. A source layout/schema change, duplicate ID, incomplete ArcGIS pagination, or loss of over 20% of a municipality’s active records stops refresh for review. History is retained in `web/data/applications.json` and Git history. Applicant contacts are not copied; only public project information is included.
+
+Contains information from the linked municipal sources, subject to their terms. OpenStreetMap contributors supply the basemap; Leaflet's licence is included in `web/vendor/LICENSE`.
+
+## Development
 
 ```sh
-python3 scripts/init.py my-tool --title "My Tool" --description "Describe what this tool does."
-```
-
-Review the category, tags and icon in `tool.json`. `access: "browser"` tells the main
-catalogue that the tool works immediately without installation. `--owner` supports a different
-GitHub owner, but only projects owned by `jsdyer` inherit the CoolCode domain.
-
-4. Replace the example in `web/` and its tests. Update the privacy explanation,
-   source attribution and README to describe the real tool.
-5. Test and preview:
-
-```sh
+python3 -m pip install -r scripts/requirements.txt
 node --test tests/*.test.mjs
 python3 -m unittest discover -s tests -v
 python3 scripts/build.py
-python3 -m http.server 8000 --directory dist
 ```
 
-Open `http://localhost:8000/`. The example trims lines, skips blanks and removes exact
-duplicates, preserving first-seen order and capitalization. It makes no API requests
-and does not persist text. Update that explanation if your app behaves differently.
+The build writes `dist/` and works at the project subpath `/langleychanges/`. Do not commit `dist/` or add a `CNAME`; the account’s main Pages site supplies the coolcode.ca domain. Node is used for tests, not a frontend dependency bundle.
 
-CI also tests the browser flow and mobile layout at a project subpath. Replace the
-sample assertions in `tests/browser_smoke.py` when implementing your own UI. To run
-that check locally (optional for ordinary preview):
+`web/` contains the application; `scripts/` contains the offline builder and data refresh; `tests/` contains model/source/build checks and Chromium user-flow tests. Browser checks cover project paths, controls, sharing, exports or layer selection, error handling, and mobile overflow. GitHub Actions installs their test-only dependencies from `tests/browser-requirements.txt`.
+
+## Publishing and maintenance
+
+`.github/workflows/pages.yml` checks pull requests and main commits. Only a successful main build deploys. Repository Settings → Pages must use **GitHub Actions**. The browser-checks artifact contains desktop/mobile screenshots. A failed build leaves the previous deployment in place.
+
+`.github/dependabot.yml` enables **GitHub Dependabot**, which proposes updates to workflow actions and configured dependencies as pull requests. A proposal does not update main until merged. Review the diff and checks for the current PR commit before merging. Netlify is not used by this project.
+
+`tool.json` describes this tool in the CoolCode catalogue. Its reviewed record belongs in `jsdyer/jsdyer.github.io/data/tools.json`; run that repository’s `scripts/sync_readme.py` to keep the hub README and polished homepage aligned. Changing this repository alone does not change the homepage listing.
+
+## Data refreshes
+
+`.github/workflows/refresh.yml` runs daily (08:47 UTC) and can be started manually from Actions → Data snapshot · Refresh and publish. GitHub schedules can be delayed and may be paused for inactive public repositories; the visible retrieval date is the source of truth.
+
+The workflow fetches and validates complete source responses, runs unit/browser checks, then commits the snapshot with GitHub’s Actions token and deploys the same tested build. Failed refreshes do not replace the last successful deployment. A normal non-force push protects concurrent edits; a rejected push stops deployment. This is the only workflow with `contents: write`; ordinary checks use read-only repository access.
+
+Manual refresh:
 
 ```sh
-python3 -m venv .venv
-. .venv/bin/activate
-python3 -m pip install -r tests/browser-requirements.txt
-python3 -m playwright install --with-deps chromium
-python3 tests/browser_smoke.py
+python3 scripts/refresh.py
 ```
 
-Playwright is a test-only dependency; the app and its static build do not use it.
+Review source/count changes before committing. Keep existing history when refreshing Langley Changes; do not delete a baseline just to reset differences.
 
-## Publish and register
+## Privacy
 
-When the actual tool is ready, in the **new tool repository** set **Settings → Pages → Build and deployment →
-Source → GitHub Actions**. Push to `main`, or manually run **Browser tool · Check and
-publish** after enabling Pages. If the initial deployment ran before Pages was enabled,
-enable it and rerun. PRs only check/build and provide a downloadable preview artifact.
-
-Keep asset paths and module imports relative. Check `https://coolcode.ca/my-tool/`.
-Do not add a CNAME or set `coolcode.ca` as this project's custom domain; the account
-site supplies it. Only successful `main` builds deploy.
-
-After verifying the app, copy the reviewed object from `tool.json` into `data/tools.json`
-in [the main site](https://github.com/jsdyer/jsdyer.github.io). Each tool still builds
-independently. Update the hub record when listing metadata changes; the hub is the
-authority for discovery. Ordinary app updates touch only this repository.
-
-The main site separates **Use in your browser** from **Install yourself**. An app
-that asks for a file is still a browser tool. Standalone Linux packages should start
-in their own repositories with their own build/release workflow, rather than copying
-this browser-only scaffold. Their hub record uses `access: "install"`, links to an
-installation guide, and includes `requirements`.
-
-## Files
-
-| Path | Purpose |
-| --- | --- |
-| `tool.json` | Page metadata and a ready-to-copy catalogue record |
-| `web/` | HTML, responsive CSS, DOM interactions and separate model logic |
-| `scripts/build.py` | Escape metadata and build `web/` into `dist/` |
-| `scripts/init.py` | Set a new project's identity |
-| `tests/` | Application and builder tests |
-| `.github/workflows/pages.yml` | Check PRs and publish successful main builds |
-| `AGENTS.md` | Instructions for future coding work |
-
-Namespace optional storage as `coolcode:<tool-id>:<key>`; CoolCode paths share a
-browser origin. Don't save pasted text/uploads by default. Document external APIs
-and send only the information needed for the selected action. Never embed secrets.
-
-Scheduled refresh is opt-in. Validate source data before deploying, display its date,
-and preserve the last good deployment on failure. Public-repository schedules can
-stop after 60 days without repository activity.
-
-Templates don't propagate future edits automatically. Adopt fixes explicitly and
-consider a versioned reusable workflow once several tools confirm the shared process.
-Choose and add the intended software license before distributing a new project.
+Only explicitly saved application IDs are stored in `coolcode:langleychanges:watchlist`. Other tools on coolcode.ca share the same browser origin, so storage keys are namespaced. Searches run against a bundled public snapshot in your browser. OpenStreetMap receives tile requests for the viewed map area. There are no accounts or analytics. Sharing places the selected record or comparison view in the URL; it does not upload private files. External source links open the original provider.

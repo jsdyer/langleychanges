@@ -1,7 +1,4 @@
-// Keep transformations separate from the DOM so they can be tested directly.
-export function cleanLines(text) {
-  if (typeof text !== 'string') throw new TypeError('Expected text');
-  const lines = text.split(/\r\n|\r|\n/).map(line => line.trim()).filter(Boolean);
-  const unique = [...new Set(lines)];
-  return { text: unique.join('\n'), count: unique.length, removed: lines.length - unique.length };
-}
+export const PAGE_SIZE=40;
+export function statusGroup(record){const s=record.status.toLowerCase();if(/issued|final approval|final reading/.test(s))return 'Approved / issued';if(/complete/.test(s))return 'Completed';if(/cancel|withdraw|expire|reject/.test(s))return 'Other / closed';return 'In progress';}
+export function filterRecords(records,{query='',jurisdiction='',community='',status='',changed=false,saved=false,watchlist=[],sort='date'}={}){const q=query.trim().toLowerCase();return records.filter(r=>(!q||[r.title,r.project,r.application,r.description,r.community].join(' ').toLowerCase().includes(q))&&(!jurisdiction||r.jurisdiction===jurisdiction)&&(!community||r.community===community)&&(!status||statusGroup(r)===status)&&(!changed||r.history.length||(!r.baseline&&r.first_seen)||r.missing_since)&&(!saved||watchlist.includes(r.id))).sort((a,b)=>{const key=sort==='changes'?'last_changed':'date';return (b[key]||'').localeCompare(a[key]||'')||a.title.localeCompare(b.title);});}
+export function readWatchlist(value){try{const v=JSON.parse(value);return Array.isArray(v)?v.filter(x=>typeof x==='string').slice(0,1000):[];}catch{return [];}}
