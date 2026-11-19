@@ -15,7 +15,7 @@ SLUG = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 def metadata(root=ROOT):
     tool = json.loads((root / "tool.json").read_text(encoding="utf-8"))
     required = {"id", "title", "description", "category", "tags", "icon", "url", "source", "hosting", "access"}
-    if not isinstance(tool, dict) or set(tool) != required:
+    if not isinstance(tool, dict) or not required <= set(tool) <= required | {"data_info"}:
         raise ValueError("tool.json has missing or unknown fields")
     for key in required - {"tags"}:
         if not isinstance(tool[key], str) or not tool[key].strip():
@@ -29,6 +29,10 @@ def metadata(root=ROOT):
     source = urlsplit(tool["source"])
     if source.scheme != "https" or not source.hostname or source.username is not None or any(c.isspace() for c in tool["source"]) or "\\" in tool["source"]:
         raise ValueError("source must be an HTTPS URL without credentials or whitespace")
+    if "data_info" in tool:
+        info = tool["data_info"]
+        if not isinstance(info, dict) or not isinstance(info.get("probes"), list):
+            raise ValueError("data_info must contain a list of source probes")
     return tool
 
 

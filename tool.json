@@ -1,7 +1,7 @@
 {
   "id": "langleychanges",
   "title": "Langley Changes",
-  "description": "Explore City and Township development applications, documents and changes over time.",
+  "description": "Follow Langley development applications and see when Township building permits appeared or left the active list.",
   "category": "places",
   "tags": [
     "canada",
@@ -13,5 +13,39 @@
   "url": "/langleychanges/",
   "source": "https://github.com/jsdyer/langleychanges",
   "hosting": "project",
-  "access": "browser"
+  "access": "browser",
+  "data_info": {
+    "mode": "snapshot",
+    "cadence": "Daily",
+    "detail": "City and Township planning records include application status and original documents. The Township active permit list provides folder numbers, issue dates, project descriptions and civic addresses.",
+    "probes": [
+      {
+        "url": "https://coolcode.ca/langleychanges/data/applications.json",
+        "path": [
+          "retrieved_at"
+        ],
+        "label": "Planning records retrieved",
+        "count_at": {
+          "path": [
+            "records"
+          ],
+          "unit": "planning records",
+          "measure": "length"
+        }
+      },
+      {
+        "url": "https://coolcode.ca/langleychanges/data/permits.json",
+        "path": [
+          "checked_at"
+        ],
+        "label": "Permit list checked",
+        "count_at": {
+          "path": [
+            "listed_folders"
+          ],
+          "unit": "listed permit folders"
+        }
+      }
+    ]
+  }
 }

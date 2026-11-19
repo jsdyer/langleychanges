@@ -1,10 +1,14 @@
 # Langley Changes
 
-Search Langley development applications and follow changes to their public records.
+Search Langley development applications and track when Township building permits appear and disappear from the public active list.
 
 **[Open the live browser tool](https://coolcode.ca/langleychanges/)** · [CoolCode catalogue](https://coolcode.ca/)
 
 No installation or account is needed to use the tool. This repository contains its independent source, tests and GitHub Pages publishing workflow.
+
+<!-- coolcode:guide -->
+Search a street to see which permit folders were listed there, then open a folder to compare its issue date with the first and last times CoolCode saw it.
+<!-- /coolcode:guide -->
 
 ## What you can do
 
@@ -13,10 +17,11 @@ No installation or account is needed to use the tool. This repository contains i
 - Inspect Township application outlines; City records remain in the list without guessed locations.
 - Save application IDs in your browser, share a record, or export filtered results as CSV.
 - See differences observed between daily snapshots, including records no longer listed.
+- Search Township permit folders by street, folder number, permit type or description. Inspect a shared folder link or export the filtered results as CSV.
 
-The first snapshot contains **644 listed applications**: 615 Township and 29 City records. One development project can have several applications; these are not building or housing-unit counts.
+The first development application snapshot contains **644 listed applications**: 615 Township and 29 City records. One development project can have several applications; these are not building or housing-unit counts.
 
-## Sources and change history
+## Development application sources and change history
 
 - [Township development activity](https://www.tol.ca/en/building-development/development-activity.aspx), including its public ArcGIS application layer and source document links.
 - [City development application portal](https://www.langleycity.ca/business-development/development/development-application-portal). This features selected applications; monthly reports linked there provide the full active list. The app does not claim complete City coverage.
@@ -26,6 +31,16 @@ Tracking began **2026-11-18**. The first snapshot is a baseline: older applicati
 Stable source record IDs connect snapshots. A source layout/schema change, duplicate ID, incomplete ArcGIS pagination, or loss of over 20% of a municipality’s active records stops refresh for review. History is retained in `web/data/applications.json` and Git history. Applicant contacts are not copied; only public project information is included.
 
 Contains information from the linked municipal sources, subject to their terms. OpenStreetMap contributors supply the basemap; Leaflet's licence is included in `web/vendor/LICENSE`.
+
+## Township building permit history
+
+The [Township active building permit list](https://apps.tol.ca/bpact.aspx) covers permits issued since January 1, 2011. The [Township’s description](https://www.tol.ca/en/building-development/building-permit-activity-information.aspx) says it updates daily and removes permits 30 days after approval of the final inspection.
+
+The collector reads every page of the unfiltered list. Each folder number identifies one permit, even when the Township publishes separate rows for several civic addresses. A folder retains its listed addresses, project descriptions, type and official issue date. Counts of source rows and unique currently listed folders appear beside the retrieval time. Development application counts are displayed separately.
+
+The first collection on November 19, 2026 (UTC) found 2,091 distinct folders across 3,237 rows on 162 pages. Of these, 393 folders covered multiple addresses. This collection establishes the baseline. A folder present at baseline may have been listed much earlier. “Last seen” is the latest successful check that contained the folder. “First check showing absence” is the earliest later check that omitted it. If a folder returns, its earlier observation period remains visible. The exact removal and final inspection approval dates are unknown. A useful additional Township feed would pair the permit folder number with the final inspection approval date.
+
+The collector validates page numbers, page sizes, source headings, required fields and folder identity, then rechecks both ends of the list. A reduction of more than 20% in rows or unique listed folders stops publication for review. The last successful history remains available in `web/data/permits.json`. The archive starts with folders observable at baseline and cannot reconstruct older delistings.
 
 ## Development
 
@@ -58,6 +73,7 @@ Manual refresh:
 
 ```sh
 python3 scripts/refresh.py
+python3 scripts/permits.py
 ```
 
 Review source/count changes before committing. Keep existing history when refreshing Langley Changes; do not delete a baseline just to reset differences.
