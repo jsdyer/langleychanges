@@ -80,4 +80,4 @@ Review source/count changes before committing. Keep existing history when refres
 
 ## Privacy
 
-Only explicitly saved application IDs are stored in `coolcode:langleychanges:watchlist`. Other tools on coolcode.ca share the same browser origin, so storage keys are namespaced. Searches run against a bundled public snapshot in your browser. OpenStreetMap receives tile requests for the viewed map area. There are no accounts or analytics. Sharing places the selected record or comparison view in the URL; it does not upload private files. External source links open the original provider.
+Only explicitly saved application IDs are stored in `coolcode:langleychanges:watchlist`. Other tools on coolcode.ca share the same browser origin, so storage keys are namespaced. Searches run against a bundled public snapshot in your browser. OpenStreetMap receives tile requests for the viewed map area. CoolCode counts page opens by tool ID. The count excludes searches and watchlist entries. Sharing places the selected record or comparison view in the URL; it does not upload private files. External source links open the original provider.
