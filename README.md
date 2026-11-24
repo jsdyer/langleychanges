@@ -81,3 +81,11 @@ Review source/count changes before committing. Keep existing history when refres
 ## Privacy
 
 Only explicitly saved application IDs are stored in `coolcode:langleychanges:watchlist`. Other tools on coolcode.ca share the same browser origin, so storage keys are namespaced. Searches run against a bundled public snapshot in your browser. OpenStreetMap receives tile requests for the viewed map area. CoolCode counts page opens by tool ID. The count excludes searches and watchlist entries. Sharing places the selected record or comparison view in the URL; it does not upload private files. External source links open the original provider.
+
+<!-- schedule-reliability -->
+## Schedule reliability
+
+Public GitHub repositories can have scheduled workflows disabled after 60 days of inactivity. A separate weekly [schedule guard](.github/workflows/schedule-guard.yml) calls GitHub's enable-workflow API for an explicit list of refresh workflows and itself. It can restore workflows disabled for inactivity, preserves manually disabled workflows, and runs independently of collection failures.
+
+This is an interim mitigation, not a scheduling guarantee: GitHub does not document active-workflow renewal as a permanent exemption, and scheduled runs can be delayed or dropped. A scheduler on our own Linux server is the planned independent trigger. The guard does not collect data, create dummy commits, or change source/check timestamps; successful collection and published data freshness still need monitoring.
+<!-- /schedule-reliability -->
