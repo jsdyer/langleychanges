@@ -50,6 +50,7 @@ def main():
                     page.locator('#filters button[type="submit"]').click()
                     page.locator('.result').first.wait_for(); assert 'Yorkson' in page.locator('.result').first.inner_text()
                     page.locator('.result').first.click(); page.locator('#detail h2').wait_for()
+                    assert page.locator('#detail h2').evaluate('e => e === document.activeElement')
                     page.get_by_role('button',name='Share this segment').click()
                     url=page.locator('#share-url').input_value(); assert '#record=' in url
                     with page.expect_download() as info:page.locator('#geojson').click()
@@ -62,8 +63,10 @@ def main():
                     page.locator('.result').first.wait_for(); expect(page.locator('#count')).to_have_text(f"{len(json.loads((ROOT/'web/data/applications.json').read_text())['records']):,}")
                     page.locator('#changed').check(); assert int(page.locator('#count').inner_text().replace(',','')) <= len(json.loads((ROOT/'web/data/applications.json').read_text())['records'])
                     page.locator('#city-preset').click(); page.locator('.result').first.wait_for()
+                    assert page.locator('#result-heading').evaluate('e => e === document.activeElement')
                     assert '0 Township' in page.locator('#map-caption').inner_text()
                     page.locator('.result').first.click(); page.locator('#detail h2').wait_for()
+                    assert page.locator('#detail h2').evaluate('e => e === document.activeElement')
                     page.get_by_role('button',name='☆ Save application',exact=True).click()
                     page.locator('#saved').check(); expect(page.locator('.result')).to_have_count(1)
                     page.get_by_role('button',name='Share',exact=True).click(); url=page.locator('#share-url').input_value()
